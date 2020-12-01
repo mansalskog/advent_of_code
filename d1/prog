@@ -1,0 +1,13 @@
+{ns[NR] = $0}
+END {for (i = 1; i < NR; i += 1) {
+        for (j = 1; j < NR; j += 1) {
+            for (k = 1; k < NR; k += 1) {
+    #            print ns[i] " " ns[j] " " ns[k];
+                if (ns[i] + ns[j] + ns[k] == 2020) {
+                    print ns[i] * ns[j] * ns[k];
+                    exit
+                }
+            }
+        }
+    }
+}
