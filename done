@@ -1,0 +1,16 @@
+#!/bin/sh
+
+day=$(date +"%-d")
+dir="d$day"
+
+last_commit=$(git log -1 --format="%cd" --date="format:%-d")
+if [ "$day" = "$last_commit" ]; then
+    echo "A commit for today already exists, quitting"
+    exit 1
+fi
+
+echo "Removing instructions"
+rm "$dir/instr.html"
+echo "Commiting solution"
+git add "$dir"
+git commit -m "Day $day"
