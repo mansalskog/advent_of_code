@@ -9,9 +9,9 @@ if [ -e "$dir" ]; then
 fi
 
 mkdir "$dir"
-echo "Starting editor"
-touch "$dir/prog.awk"
-open -a aquamacs "$dir/prog.awk"
+echo "Copying template"
+cp templ.awk "$dir/prog.awk"
+# open -a aquamacs "$dir/prog.awk"
 echo "Downloading personal input"
 cookie=$(cat cookie)
 curl "https://adventofcode.com/2020/day/$day/input" -b "$cookie" --compressed -o "$dir/input"
