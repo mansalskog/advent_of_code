@@ -9,7 +9,7 @@ else
 	mkdir "$dir"
 	echo "Copying template"
 	cp templ.awk "$dir/prog.awk"
-	# open -a aquamacs "$dir/prog.awk"
+	open -a aquamacs "$dir/prog.awk"
 	echo "Downloading personal input"
 	cookie=$(cat cookie)
 	curl "https://adventofcode.com/2020/day/$day/input" -b "$cookie" --compressed -o "$dir/input"
@@ -19,9 +19,9 @@ read -n 1 -p "Download instructions and test data?" ans
 echo # add newline
 if (echo $ans | grep -q "[yY]"); then
 	echo "Downloading instructions"
-	curl "https://adventofcode.com/2020/day/$day" -o "$dir/instr.html"
+	curl "https://adventofcode.com/2020/day/$day" -o "$dir/site.html"
 	echo "Extracting test data" # assume data lies in the first <pre> element
-	awk '/<pre>/{p=1} /<\/pre>/{nextfile} p{sub(/<pre><code>/,"");print}' "$dir/instr.html" >"$dir/test"
+	awk '/<pre>/{p=1} /<\/pre>/{nextfile} p{sub(/<pre><code>/,"");print}' "$dir/site.html" >"$dir/test"
 else
 	echo "Skipping instruction download"
 fi

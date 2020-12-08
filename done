@@ -10,7 +10,7 @@ if [ "$day" = "$last_commit" ]; then
 fi
 
 echo "Removing instructions"
-rm "$dir/instr.html"
+rm "$dir/site.html"
 echo "Commiting solution"
 git add "$dir"
 git commit -m "Day $day"
