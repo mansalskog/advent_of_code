@@ -1,0 +1,27 @@
+#!/bin/sh
+
+day=$(date +"%-d")
+cookie=$(cat cookie)
+boardid=$(cat boardid)
+resfile="results-$day.html"
+if [ ! -e "$resfile" ]; then
+	curl "https://adventofcode.com/2020/leaderboard/private/view/$boardid" -b "$cookie" --compressed -o "$resfile"
+fi
+
+awk '/privboard-row/{
+if(p++>10)exit;
+n=1;
+while(1){
+	i=match($0,/privboard-star-(both|unlocked|locked)/);
+	if(i==0)break;
+	if(n==1)b=substr($0,1,i);
+	r=substr($0,i);
+	s[n++]=index(r,"both")?"#":index(r,"unlocked")?"+":" ";
+	$0=substr($0,i+RLENGTH +1)}
+if(sub(/.*<span class="privboard-name">/,"")){
+	gsub(/<[^>]+(>|$)/,"",b);
+	printf("%s",b);
+	for(i=1;i<=n;i++)printf("%s",s[i]);
+	gsub(/<[^>]+>/,"");
+	sub(/ \(AoC\+\+\)/,"");
+	print"",$0}}' "$resfile"
