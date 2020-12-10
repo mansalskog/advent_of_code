@@ -11,7 +11,7 @@ int main(int argc, const char **argv) {
 	p.mem[1] = 12;
 	p.mem[2] = 2;
 	p_run(&p, NULL, NULL);
-	printf("%d\n", p.mem[0]);
+	printf("%lld\n", p.mem[0]);
 
 	for (int noun = 0; noun <= 99; noun++) {
 		for (int verb = 0; verb <= 99; verb++) {

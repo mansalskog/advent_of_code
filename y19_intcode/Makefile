@@ -1,6 +1,6 @@
-cc=gcc -Wall -Wextra -std=c99 -pedantic
+cc=gcc -Wall -Wextra -std=c99 -pedantic -g
 
-all: bin/ bin/d2 bin/d5 bin/d7
+all: bin/ bin/d2 bin/d5 bin/d7 bin/d9 bin/d11 bin/d13
 
 bin/:
 	mkdir bin/
@@ -10,3 +10,6 @@ bin/%: %.c bin/intcode.o
 
 bin/intcode.o: intcode.c intcode.h
 	$(cc) -c $< -o $@
+
+clean:
+	rm -r bin/
