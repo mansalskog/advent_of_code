@@ -10,7 +10,7 @@ int main(int argc, const char **argv) {
 	p_copy(&p, &orig);
 	p.mem[1] = 12;
 	p.mem[2] = 2;
-	p_run(&p);
+	p_run(&p, NULL, NULL);
 	printf("%d\n", p.mem[0]);
 
 	for (int noun = 0; noun <= 99; noun++) {
@@ -18,7 +18,7 @@ int main(int argc, const char **argv) {
 			p_copy(&p, &orig);
 			p.mem[1] = noun;
 			p.mem[2] = verb;
-			p_run(&p);
+			p_run(&p, NULL, NULL);
 			if (p.mem[0] == 19690720) {
 				printf("%d\n", 100 * noun + verb);
 				goto done;

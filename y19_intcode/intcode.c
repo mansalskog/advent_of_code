@@ -57,9 +57,8 @@ void p_copy(prog_t *dst, const prog_t *src) {
 	memcpy(dst, src, sizeof *dst);
 }
 
-void p_run(prog_t *p) {
-	int end = 0;
-	while (!end) {
+int p_run(prog_t *p, queue_t *in, queue_t *out) {
+	while (1) {
 		int instr = p->mem[p->pc];
 		if (instr < 0) {
 			error("Instruction cannot be negative: %d", instr);
@@ -69,7 +68,7 @@ void p_run(prog_t *p) {
 		int *a[3] = {0};
 		for (int i = 0; i < OP_ARGS[op]; i++) {
 			a[i] = &p->mem[p->pc + 1 + i];
-			debug(2, "parameter %d has mode %d", i, mode % 10);
+			debug(20, "parameter %d has mode %d", i, mode % 10);
 			if (mode % 10 == MODE_POS) {
 				a[i] = &p->mem[*a[i]];
 			}
@@ -80,50 +79,82 @@ void p_run(prog_t *p) {
 		}
 		switch (op % 100) {
 		case OP_ADD:
-			debug(1, "adding %d + %d", a[0], a[1]);
+			debug(10, "adding %d + %d", a[0], a[1]);
 			*a[2] = *a[0] + *a[1];
 			break;
 		case OP_MUL:
-			debug(1, "multiplying %d * %d", a[0], a[1]);
+			debug(10, "multiplying %d * %d", a[0], a[1]);
 			*a[2] = *a[0] * *a[1];
 			break;
 		case OP_INP:
-			debug(1, "reading input");
-			scanf("%d", a[0]);
+			if (in == NULL) {
+				scanf("%d", a[0]);
+			} else {
+				if (q_empty(in)) {
+					return SIG_BLOCK;
+				}
+				*a[0] = q_remove(in);
+			}
+			debug(10, "read input %d", *a[0]);
 			break;
 		case OP_OUT:
-			debug(1, "writing output");
-			printf("%d\n", *a[0]);
+			debug(10, "writing output %d", *a[0]);
+			if (out == NULL) {
+				printf("%d\n", *a[0]);
+			} else {
+				q_insert(out, *a[0]);
+			}
 			break;
 		case OP_JNZ:
-			debug(1, "jumping to %d if %d != 0", *a[1], *a[0]);
+			debug(10, "jumping to %d if %d != 0", *a[1], *a[0]);
 			if (*a[0] != 0) {
 				p->pc = *a[1] - 1 - OP_ARGS[op];
 			}
 			break;
 		case OP_JZ:
-			debug(1, "jumping to %d if %d == 0", *a[1], *a[0]);
+			debug(10, "jumping to %d if %d == 0", *a[1], *a[0]);
 			if (*a[0] == 0) {
 				p->pc = *a[1] - 1 - OP_ARGS[op];
 			}
 			break;
 		case OP_LT:
-			debug(1, "comparing %d < %d", *a[0], *a[1]);
+			debug(10, "comparing %d < %d", *a[0], *a[1]);
 			*a[2] = *a[0] < *a[1];
 			break;
 		case OP_EQ:
-			debug(1, "comparing %d == %d", *a[0], *a[1]);
+			debug(10, "comparing %d == %d", *a[0], *a[1]);
 			*a[2] = *a[0] == *a[1];
 			break;
 		case OP_END:
-			debug(1, "halting");
-			end = 1;
-			break;
+			debug(10, "halting");
+			return SIG_END;
 		default:
 			error("Invalid opcode %d", op);
 		}
 		p->pc += 1 + OP_ARGS[op];
 	}
+}
+
+int q_empty(queue_t *q) {
+	return q->head >= q->tail;
+}
+
+void q_insert(queue_t *q, int val) {
+	if (q->tail >= QUEUE_MAX_LEN) {
+		error("Too long queue, max length is %d", QUEUE_MAX_LEN);
+	}
+	q->data[q->tail++] = val;
+}
+
+int q_remove(queue_t *q) {
+	if (q_empty(q)) {
+		error("Reading past end of queue");
+	}
+	return q->data[q->head++];
+}
+
+void q_clear(queue_t *q) {
+	q->head = q->tail = 0;
 }
 
 void debug(int level, const char *msg, ...) {
