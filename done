@@ -1,10 +1,11 @@
 #!/bin/sh
 
-day=$(date +"%-d")
-dir="d$day"
+day=$(date +"%d")
+year=$(date +"%y")
+dir="y$year/d$day"
 
-last_commit=$(git log -1 --format="%cd" --date="format:%-d")
-if [ "$day" = "$last_commit" ]; then
+last_commit=$(git log -1 --format="%cd" --date="format:%y-%d")
+if [ "$year-$day" = "$last_commit" ]; then
     echo "A commit for today already exists, quitting"
     exit 1
 fi
@@ -13,4 +14,4 @@ echo "Removing instructions"
 rm "$dir/site.html"
 echo "Commiting solution"
 git add "$dir"
-git commit -m "Day $day"
+git commit -m "20$year, day $day"

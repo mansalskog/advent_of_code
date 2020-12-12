@@ -1,6 +1,6 @@
 #!/bin/sh
 
-day=$(date +"%-d")
+day=$(date +"%d")
 cookie=$(cat cookie)
 boardid=$(cat boardid)
 resfile="results-$day.html"
