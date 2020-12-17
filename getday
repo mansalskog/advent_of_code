@@ -1,0 +1,21 @@
+#!/bin/sh
+# Usage: getday [day] [year]
+# If day or year is omitted, use the current
+
+if [ "$#" -ge 1 ]; then
+	# handles both "05" and "5"
+	day=$(date -jf "%d" +"%d" "$1")
+else
+	day=$(date +"%d")
+fi
+
+if [ "$#" -ge 2 ]; then
+	# try "2019" first, and if fail, try "19"
+	year=$(date -jf "%Y" +"%y" "$2" 2>/dev/null || date -jf "%y" +"%y" "$2")
+else
+	year=$(date +"%y")
+fi
+
+dir="y$year/d$day"
+
+echo "$day" "$year" "$dir"

@@ -1,17 +1,33 @@
 #!/bin/sh
+# Usage: done [day] [year]
+# Note: this is compatible with /bin/sh,
+# except for some reason read -r does not work
 
-day=$(date +"%d")
-year=$(date +"%y")
-dir="y$year/d$day"
+base=$(cd "$(dirname "$0")" && pwd)
+tmp=$("$base/getday" "$@")
+day=$(echo "$tmp" | cut -d' ' -f1)
+year=$(echo "$tmp" | cut -d' ' -f2)
+dir=$(echo "$tmp" | cut -d' ' -f3)
 
-last_commit=$(git log -1 --format="%cd" --date="format:%y-%d")
-if [ "$year-$day" = "$last_commit" ]; then
-    echo "A commit for today already exists, quitting"
+if [ ! -d "$dir" ]; then
+	echo "Not a directory: $dir"
+	exit 1
+fi
+
+branch=$(git branch --show-current)
+if [ "$branch" != master ]; then
+	echo "On the wrong branch ($branch)"
+	exit 1
+fi
+
+# search for commit message with year and day as words
+old_commit=$(git log --all --grep="\<\(20\)\?$year\>.*\<$day\>")
+if [ -n "$old_commit" ]; then
+    echo "A commit for $year-$day already exists:"
+	echo "$old_commit"
     exit 1
 fi
 
-echo "Removing instructions"
-rm "$dir/site.html"
 echo "Commiting solution"
 git add "$dir"
 git commit -m "20$year, day $day"

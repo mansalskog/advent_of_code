@@ -1,28 +1,30 @@
 #!/bin/sh
+# Usage: go [day] [year]
+# Note: this is compatible with /bin/sh,
+# except for some reason read -r does not work
 
-day=$(date +"%d")
-year=$(date +"%y")
-dir="y$year/d$day"
+base=$(cd "$(dirname "$0")" && pwd)
+tmp=$("$base/getday" "$@")
+day=$(echo "$tmp" | cut -d' ' -f1)
+year=$(echo "$tmp" | cut -d' ' -f2)
+dir=$(echo "$tmp" | cut -d' ' -f3)
 
-if [ -e "$dir" ]; then
-    echo "Directory $dir exists, skipping input download"
+# Create directory or fail if it is a file
+mkdir -p "$dir" || exit 1
+
+if [ -e "$dir/input" ]; then
+    echo "Input file $dir/input exists, skipping donwload"
 else
-	mkdir "$dir"
-	echo "Copying template"
-	cp "y$year/templ.awk" "$dir/prog.awk"
-	open -a aquamacs "$dir/prog.awk"
 	echo "Downloading personal input"
 	cookie=$(cat cookie)
 	curl "https://adventofcode.com/20$year/day/$day/input" -b "$cookie" --compressed -o "$dir/input"
 fi
 
-read -n 1 -p "Download instructions and test data?" ans
-echo # add newline
-if (echo $ans | grep -q "[yY]"); then
-	echo "Downloading instructions"
-	curl "https://adventofcode.com/20$year/day/$day" -o "$dir/site.html"
-	echo "Extracting test data" # assume data lies in the first <pre> element
-	awk '/<pre>/{p=1} /<\/pre>/{nextfile} p{sub(/<pre><code>/,"");print}' "$dir/site.html" >"$dir/test"
+if [ -e "$dir/test" ]; then
+	echo "Test file $dir/test exists, skipping download"
 else
-	echo "Skipping instruction download"
+	echo "Downloading instructions and extracting test data"
+	# assume data lies in the first <pre> element, within a <code>
+	curl "https://adventofcode.com/20$year/day/$day" |\
+	   	awk '/<pre>/{p=1} /<\/pre>/{nextfile} p{sub(/<pre><code>/,"");print}' >"$dir/test"
 fi
