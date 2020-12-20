@@ -46,11 +46,11 @@ int main(int argc, const char **argv) {
 				score = t;
 			} else {
 				switch (t) {
-				case 0:	s_put(s, x, y, ' '); break;
-				case 1:	s_put(s, x, y, '%'); break;
-				case 2:	s_put(s, x, y, '#'); break;
-				case 3:	s_put(s, x, y, '='); break;
-				case 4:	s_put(s, x, y, '0'); break;
+				case 0: s_put(s, x, y, ' '); break;
+				case 1: s_put(s, x, y, '%'); break;
+				case 2: s_put(s, x, y, '#'); break;
+				case 3: s_put(s, x, y, '='); break;
+				case 4: s_put(s, x, y, '0'); break;
 				}
 			}
 		}

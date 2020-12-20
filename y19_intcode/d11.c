@@ -26,10 +26,10 @@ int main(int argc, const char **argv) {
 		visited[x + y * WIDTH] = 1;
 		dir = ((dir + (q_remove(&out) ? -1 : 1)) % 4 + 4) % 4;
 		switch (dir) {
-		case 0:	x++; break;
-		case 1:	y--; break;
-		case 2:	x--; break;
-		case 3:	y++; break;
+		case 0: x++; break;
+		case 1: y--; break;
+		case 2: x--; break;
+		case 3: y++; break;
 		}
 	}
 	int count = 0;
