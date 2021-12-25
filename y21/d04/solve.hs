@@ -46,5 +46,5 @@ main = do
     let nums = map read . splitWhen (== ',') $ ls !! 0 :: [Int]
     let boards = map (Board . map (map (\s -> (read s, False)) . words)) . splitWhen (== "") $ drop 2 ls :: [Board]
     let scores = map (bingoSteps nums 0) boards
-    print . snd $ minimumBy (compare `on` fst) scores
-    print . snd $ maximumBy (compare `on` fst) scores
+    print . snd $ minimumBy (on compare fst) scores
+    print . snd $ maximumBy (on compare fst) scores
