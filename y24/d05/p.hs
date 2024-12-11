@@ -22,23 +22,25 @@ followsAll rules pages = all (flip follows pages) rules
 middle :: Pages -> Int
 middle xs = xs !! (length xs `div` 2)
 
-fixWithRule :: Rule -> Pages -> Pages
-fixWithRule [fst,snd] ps = if follows [fst,snd] ps
-    then ps
-    else case elemIndex snd ps of
-        Nothing -> ps
-        Just idx -> let fixed = filter (/= fst)
-            in fixed (take idx ps) ++ [fst] ++ fixed (drop idx ps)
+rulesOrdering :: [Rule] -> Int -> Int -> Ordering
+rulesOrdering rules x y
+    | x == y = EQ
+    | [x,y] `elem` rules = LT
+    | otherwise = GT
 
 main = do
-    ls <- fmap lines $ readFile "test"
+    ls <- fmap lines $ readFile "input"
     let [ruleText,pageText] = splitOn [""] ls
     let rules = map parseRule ruleText
     let pages = map parsePages pageText
     print . sum . map middle . filter (followsAll rules) $ pages
 
-    let incPages = filter (not . followsAll rules) $ pages
-    print incPages
-    let brokenRules = map (\ps -> filter (not . flip follows ps) rules) $ incPages
-    print brokenRules
-    print $ foldl' (flip fixWithRule (head incPages)) (head brokenRules)
+    let brokenPages = filter (not . followsAll rules) $ pages
+    print brokenPages
+    let relevantRules = filter (\[x,y] -> any (x `elem`) brokenPages || any (y `elem`) brokenPages) rules
+    print relevantRules
+    let fixedPages = map (sortBy (rulesOrdering relevantRules)) brokenPages
+    print fixedPages
+    print . sum . map middle $ fixedPages
+    -- let brokenRules = map (\ps -> filter (not . flip follows ps) rules) $ brokenPages
+    -- print brokenRules
