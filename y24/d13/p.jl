@@ -31,18 +31,31 @@ function solve(batch)
 	bx = getnum(r"X\+([0-9]+)", batch[2])
 	by = getnum(r"Y\+([0-9]+)", batch[2])
 
-	gx = getnum(r"X=([0-9]+)", batch[3])
-	gy = getnum(r"Y=([0-9]+)", batch[3])
+	gx = getnum(r"X=([0-9]+)", batch[3]) + Rational(10000000000000)
+	gy = getnum(r"Y=([0-9]+)", batch[3]) + Rational(10000000000000)
 
 	# println(batch)
 	# println([ax, ay, bx, by, gx, gy])
 
-	sol1 = solve_opt(ax, ay, bx, by, gx, gy)
-	sol2 = moron(ax, ay, bx, by, gx, gy)
-	if ismissing(sol1) || ismissing(sol2) || sol1 != sol2
-		# println(sol1, " ", sol2)
+	# sol1 = solve_opt(ax, ay, bx, by, gx, gy)
+	# sol2 = moron(ax, ay, bx, by, gx, gy)
+	sol3 = matr(ax, ay, bx, by, gx, gy)
+	# if !eqmissing(sol1, sol2) || !eqmissing(sol2, sol3)
+		# println(sol1, " ", sol2, " ", sol3)
+	# else
+		# println("all ", sol1)
+	# end
+	return sol3
+end
+
+function eqmissing(a, b)
+	if ismissing(a)
+		return ismissing(b)
 	end
-	return sol2
+	if ismissing(b)
+		return ismissing(a)
+	end
+	return a == b
 end
 
 function solve_opt(ax, ay, bx, by, gx, gy)
@@ -55,10 +68,8 @@ function solve_opt(ax, ay, bx, by, gx, gy)
 	ac = 3
 	bc = 1
 
-	@constraint(model, (na * ax + nb * bx - gx) <= 0.1)
-	@constraint(model, (na * ay + nb * by - gy) <= 0.1)
-	@constraint(model, (na * ax + nb * bx - gx) >= -0.1)
-	@constraint(model, (na * ay + nb * by - gy) >= -0.1)
+	@constraint(model, na * ax + nb * bx == gx)
+	@constraint(model, na * ay + nb * by == gy)
 
 	@constraint(model, 0 <= na <= 100)
 	@constraint(model, 0 <= nb <= 100)
@@ -66,12 +77,30 @@ function solve_opt(ax, ay, bx, by, gx, gy)
 	@objective(model, Min, na * ac + nb * bc)
 	optimize!(model)
 
-	if is_solved_and_feasible(model)
+	if is_solved_and_feasible(model) && isinteger(value(na)) && isinteger(value(nb))
 		sol = objective_value(model)
 		# println(value(na), " ", value(nb))
 		return Int(sol)
 	else
 		return missing
+	end
+end
+
+function closeinteger(x)
+	eps = 0.00001
+	dx = mod(x, 1.0)
+	return dx < eps || 1 - dx < eps
+end
+
+function matr(ax, ay, bx, by, gx, gy)
+	A = [Rational(ax) Rational(bx) ; Rational(ay) Rational(by)]
+	c = [Rational(gx) ; Rational(gy)]
+	n = A \ c;
+	if isinteger(n[1]) && isinteger(n[2]) # && 0 <= n[1] <= 100 && 0 <= n[2] <= 100
+		round(3 * n[1] + 1 * n[2])
+	else
+		# println(n)
+		missing
 	end
 end
 
