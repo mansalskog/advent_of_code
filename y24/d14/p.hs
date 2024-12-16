@@ -32,24 +32,34 @@ simulate :: (Int,Int) -> Int -> [Robot] -> [Robot]
 -- simulate n dim = (!! n) . iterate (simulateStep dim)
 simulate dim n = map (simulateRobot dim n)
 
-displayCountsScale :: Int -> (Int,Int) -> [Robot] -> [String]
-displayCountsScale s (w,h) rs = [[count x y | x <- [0..((w-1) `div` s)]] | y <- [0..((h-1) `div` s)]]
+countsAtScale :: Int -> (Int,Int) -> [Robot] -> [[Int]]
+countsAtScale s (w,h) rs = [[count x y | x <- [0..((w-1) `div` s)]] | y <- [0..((h-1) `div` s)]]
 	where
-		count x y = fixZero . head . show . length $ filter (\(Robot rx ry _ _) -> (rx `div` s) == x && (ry `div` s) == y) rs
-		fixZero '0' = '.'
-		fixZero c = c
+		count x y = length $ filter (\(Robot rx ry _ _) -> (rx `div` s) == x && (ry `div` s) == y) rs
 
-displayCounts :: (Int,Int) -> [Robot] -> [String]
-displayCounts = displayCountsScale 1
-
-printCountsScale :: Int -> (Int,Int) -> [Robot] -> IO ()
-printCountsScale s dim = mapM_ putStrLn . displayCountsScale s dim
+displayCountsScale :: Int -> (Int,Int) -> [Robot] -> [String]
+-- why can't I write this using composition?
+displayCountsScale n dim rs = map (map dispCount) $ countsAtScale n dim rs
+	where
+		dispCount :: Int -> Char
+		dispCount 0 = '.'
+		dispCount c
+			| c < 10 = head $ show c
+			| otherwise = '+'
 
 simulateVisual :: (Int,Int) -> Int -> [Robot] -> IO ()
 simulateVisual dim n rs = do
 	let rs' = simulate dim n rs
-	getLine
-	printCountsScale 5 dim rs
+	let ls = countsAtScale 20 dim rs'
+	if any (any (>= 80)) ls then do
+		print n
+		-- mapM_ print ls
+		mapM_ putStrLn $ displayCountsScale 1 dim rs'
+		getLine
+		return ()
+	else do
+		print n
+		return ()
 
 main = do
 	let dim = (101,103)
@@ -61,4 +71,4 @@ main = do
 	let qCounts = map (flip (countQuadrant dim) robots') [0..3]
 	print qCounts
 	print $ foldr (*) 1 qCounts
-	mapM_ (\n -> simulateVisual dim n robots) [0..1000]
+	mapM_ (\n -> simulateVisual dim n robots) [0..100000]
