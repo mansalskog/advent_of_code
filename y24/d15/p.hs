@@ -55,6 +55,81 @@ step state@(State tiles pos) instr = let pos' = applyDelta pos (instrDelta instr
         Just '#' -> state
         -- Nothing -> (State tiles pos) -- should never happen
 
+-- Part 2 --
+
+toWide :: State -> State
+toWide (State tiles (Pos x y)) = State newTiles (Pos (2*x) y)
+    where
+        newTiles = M.foldrWithKey updateTile M.empty tiles
+        updateTile :: Pos -> Char -> Tiles -> Tiles
+        updateTile (Pos x y) c = M.insert (Pos (2*x) y) c1 . M.insert (Pos (2*x+1) y) c2
+            where
+                [c1,c2] = case c of
+                    'O' -> "[]"
+                    '#' -> "##"
+                    '.' -> ".."
+                    '@' -> "@."
+
+stepWide :: Char -> State -> State
+stepWide i state@(State tiles pos) = let
+        delta = instrDelta i
+        pos' = applyDelta pos delta
+    in case fromJust $ M.lookup pos' tiles of
+        c
+            | c == '.' -> moveRobot pos' state -- move into empty
+            | c == '#' -> state -- no move possible
+            | c `elem` "[]" -> case pushBoxes pos' delta state of
+                Just state -> moveRobot pos' state -- boxes moved alreay, just update robot
+                Nothing -> state -- no move possible
+
+-- move boxes and push robot if possible
+pushBoxes :: Pos -> Delta -> State -> Maybe State
+pushBoxes pos delta (State tiles robotPos) = case moveWideBox pos delta tiles of
+    Just tiles' -> Just $ State tiles' robotPos
+    Nothing -> Nothing
+
+moveWideBox :: Pos -> Delta -> Tiles -> Maybe Tiles
+moveWideBox pos delta tiles = let
+        c = fromJust $ M.lookup pos tiles
+        (linkedPos,linkedC) = case c of
+            '[' -> (applyDelta pos (Delta 1 0), ']')
+            ']' -> (applyDelta pos (Delta (-1) 0), '[')
+            otherwise -> error $ "Invalid box " ++ [c]
+        pos' = applyDelta pos delta
+        linkedPos' = applyDelta linkedPos delta
+        propLinked :: Tiles -> Maybe Tiles
+        propLinked ts = case fromJust $ M.lookup linkedPos' ts of
+            c
+                | c == '.' -> Just ts
+                | c `elem` "[]" -> moveWideBox linkedPos' delta ts
+                | c == '#' -> Nothing
+        prop :: Tiles -> Maybe Tiles
+        prop ts = case fromJust $ M.lookup pos' ts of
+            c
+                | c == '.' -> Just ts
+                | c `elem` "[]" -> moveWideBox pos' delta ts
+                | c == '#' -> Nothing
+        moveThem :: Tiles -> Maybe Tiles
+        moveThem ts = if '#' == (fromJust $ M.lookup pos' ts) || '#' == (fromJust $ M.lookup linkedPos' ts)
+            then Nothing
+            else Just . M.insert pos' c . M.insert linkedPos' linkedC . M.insert pos '.' . M.insert linkedPos '.' $ ts
+    in if linkedPos /= pos'
+        then propLinked tiles >>= prop >>= moveThem
+        else moveThem tiles
+
+simulateWide :: Int -> [Char] -> State -> IO ()
+simulateWide _ [] state = do
+    printTiles $ getTiles state
+    return ()
+simulateWide idx (i:is) state = do
+    let state' = stepWide i state
+    if True
+        then do
+            putStrLn $ show idx ++ " move " ++ [i] ++ ":"
+            printTiles $ getTiles state'
+        else return ()
+    simulateWide (idx+1) is state'
+
 printTiles :: Tiles -> IO ()
 printTiles tiles = putStrLn . unlines $ [[fromJust $ M.lookup (Pos x y) tiles | x <- [0..w]] | y <- [0..h]]
     where
@@ -85,4 +160,8 @@ main = do
     let state = parseState ls0
     let instr = concat ls1
     -- printTiles $ getTiles state
-    simulate instr state
+    -- simulate instr state
+    -- Part 2
+    let wideState = toWide $ state
+    -- printTiles $ getTiles wideState
+    simulateWide 0 (take 150 instr) wideState
